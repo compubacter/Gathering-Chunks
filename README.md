@@ -83,6 +83,7 @@ For large changes, open an issue first to discuss approach and scope.
 
 - Original mod author: immortius
 - Fork maintainer: Ryvione
+- Ryvione fork repository: https://github.com/ryvione/Gathering-Chunks
 - Original repository: https://github.com/immortius/chunkbychunk
 
 ## License
