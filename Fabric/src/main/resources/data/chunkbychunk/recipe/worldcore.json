@@ -1,17 +1,17 @@
-{
-  "type" : "minecraft:crafting_shaped",
-  "pattern": [
-    "cc ",
-    "cc ",
-    "   "
-  ],
-  "key" : {
-    "c" : {
-      "item": "chunkbychunk:worldcrystal"
-    }
-  },
-  "result" : {
-    "id" : "chunkbychunk:worldcore",
-    "count" : 1
-  }
+﻿{
+    "type":  "minecraft:crafting_shaped",
+    "pattern":  [
+                    "cc ",
+                    "cc ",
+                    "   "
+                ],
+    "key":  {
+                "c":  "chunkbychunk:worldcrystal"
+            },
+    "result":  {
+                   "id":  "chunkbychunk:worldcore",
+                   "count":  1
+               }
 }
+
+

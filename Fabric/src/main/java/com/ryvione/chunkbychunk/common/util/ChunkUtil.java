@@ -31,14 +31,14 @@ public final class ChunkUtil {
         return random;
     }
     public static int getSafeSpawnHeight(ChunkAccess chunk, int x, int z) {
-        BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos(x,chunk.getMaxBuildHeight() - 1,z);
-        while (pos.getY() > chunk.getMinBuildHeight()) {
+        BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos(x,chunk.getMaxY() - 1,z);
+        while (pos.getY() > chunk.getMinY()) {
             if (chunk.getBlockState(pos).getBlock().isPossibleToRespawnInThis(chunk.getBlockState(pos))) {
                 break;
             }
             pos.setY(pos.getY() - 1);
         }
-        while (pos.getY() > chunk.getMinBuildHeight()) {
+        while (pos.getY() > chunk.getMinY()) {
             if (!chunk.getBlockState(pos).getBlock().isPossibleToRespawnInThis(chunk.getBlockState(pos))) {
                 return pos.getY() + 1;
             }
@@ -57,7 +57,7 @@ public final class ChunkUtil {
         BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos(0,0,0);
         int count = 0;
         for (pos.setX(chunkPos.getMinBlockX()); pos.getX() <= chunkPos.getMaxBlockX(); pos.setX(pos.getX() + 1)) {
-            for (pos.setY(chunk.getMinBuildHeight()); pos.getY() <= chunk.getMaxBuildHeight() - 1; pos.setY(pos.getY() + 1)) {
+            for (pos.setY(chunk.getMinY()); pos.getY() <= chunk.getMaxY() - 1; pos.setY(pos.getY() + 1)) {
                 for (pos.setZ(chunkPos.getMinBlockZ()); pos.getZ() <= chunkPos.getMaxBlockZ(); pos.setZ(pos.getZ() + 1)) {
                     if (blocks.contains(chunk.getBlockState(pos).getBlock())) {
                         count++;
@@ -72,7 +72,7 @@ public final class ChunkUtil {
         BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos(0,0,0);
         int count = 0;
         for (pos.setX(chunkPos.getMinBlockX()); pos.getX() <= chunkPos.getMaxBlockX(); pos.setX(pos.getX() + 1)) {
-            for (pos.setY(chunk.getMinBuildHeight()); pos.getY() <= chunk.getMaxBuildHeight() - 1; pos.setY(pos.getY() + 1)) {
+            for (pos.setY(chunk.getMinY()); pos.getY() <= chunk.getMaxY() - 1; pos.setY(pos.getY() + 1)) {
                 for (pos.setZ(chunkPos.getMinBlockZ()); pos.getZ() <= chunkPos.getMaxBlockZ(); pos.setZ(pos.getZ() + 1)) {
                     if (chunk.getBlockState(pos).getBlock() == block) {
                         count++;
@@ -87,7 +87,7 @@ public final class ChunkUtil {
         BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos(0,0,0);
         int count = 0;
         for (pos.setX(chunkPos.getMinBlockX()); pos.getX() <= chunkPos.getMaxBlockX(); pos.setX(pos.getX() + 1)) {
-            for (pos.setY(chunk.getMinBuildHeight()); pos.getY() <= chunk.getMaxBuildHeight(); pos.setY(pos.getY() + 1)) {
+            for (pos.setY(chunk.getMinY()); pos.getY() <= chunk.getMaxY(); pos.setY(pos.getY() + 1)) {
                 for (pos.setZ(chunkPos.getMinBlockZ()); pos.getZ() <= chunkPos.getMaxBlockZ(); pos.setZ(pos.getZ() + 1)) {
                     if (chunk.getBlockState(pos).is(blockTag)) {
                         count++;
@@ -98,3 +98,4 @@ public final class ChunkUtil {
         return count;
     }
 }
+

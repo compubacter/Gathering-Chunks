@@ -11,20 +11,20 @@
 package com.ryvione.chunkbychunk.common.blockEntities;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.WorldlyContainer;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.player.StackedContents;
+import net.minecraft.world.entity.player.StackedItemContents;
 import net.minecraft.world.inventory.StackedContentsCompatible;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BaseContainerBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import java.util.Map;
 public abstract class BaseFueledBlockEntity extends BaseContainerBlockEntity implements WorldlyContainer, StackedContentsCompatible {
     private final int fuelSlot;
@@ -64,19 +64,19 @@ public abstract class BaseFueledBlockEntity extends BaseContainerBlockEntity imp
         return false;
     }
     @Override
-    protected void loadAdditional(CompoundTag tag, HolderLookup.Provider provider) {
-        super.loadAdditional(tag, provider);
+    protected void loadAdditional(ValueInput tag) {
+        super.loadAdditional(tag);
         this.items = NonNullList.withSize(this.getContainerSize(), ItemStack.EMPTY);
-        ContainerHelper.loadAllItems(tag, this.items, provider);
-        this.chargedFuel = tag.getInt("ChargedFuel");
-        this.remainingFuel = tag.getInt("RemainingFuel");
+        ContainerHelper.loadAllItems(tag, this.items);
+        this.chargedFuel = tag.getIntOr("ChargedFuel", 0);
+        this.remainingFuel = tag.getIntOr("RemainingFuel", 0);
     }
     @Override
-    protected void saveAdditional(CompoundTag tag, HolderLookup.Provider provider) {
-        super.saveAdditional(tag, provider);
+    protected void saveAdditional(ValueOutput tag) {
+        super.saveAdditional(tag);
         tag.putInt("ChargedFuel", this.chargedFuel);
         tag.putInt("RemainingFuel", this.remainingFuel);
-        ContainerHelper.saveAllItems(tag, this.items, provider);
+        ContainerHelper.saveAllItems(tag, this.items);
     }
     public boolean isFuel(ItemStack itemStack) {
         if (itemFuel.getOrDefault(itemStack.getItem(), () -> 0).get() > 0) {
@@ -148,7 +148,7 @@ public abstract class BaseFueledBlockEntity extends BaseContainerBlockEntity imp
         return this.items;
     }
     @Override
-    public void fillStackedContents(StackedContents contents) {
+    public void fillStackedContents(StackedItemContents contents) {
         for (ItemStack itemstack : items) {
             contents.accountStack(itemstack);
         }
@@ -177,3 +177,5 @@ public abstract class BaseFueledBlockEntity extends BaseContainerBlockEntity imp
         int get();
     }
 }
+
+

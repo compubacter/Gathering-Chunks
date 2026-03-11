@@ -9,10 +9,11 @@
  */
 
 package com.ryvione.chunkbychunk.server.world;
+
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
+import net.minecraft.core.UUIDUtil;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.datafix.DataFixTypes;
@@ -20,13 +21,19 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.RandomizableContainerBlockEntity;
 import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraft.world.level.saveddata.SavedDataType;
+
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
 public class ChestTracker extends SavedData {
+    private static final String DATA_ID = "chunkbychunk_chest_tracker";
+    private static final Codec<ChestTrackerData> DATA_CODEC = ChestTrackerData.CODEC;
+
     private final Set<BlockPos> chestPositions = new HashSet<>();
     private final Map<UUID, Boolean> playerTrackerEnabled = new HashMap<>();
     private final MinecraftServer server;
@@ -36,75 +43,40 @@ public class ChestTracker extends SavedData {
         if (overworld == null) {
             return new ChestTracker(server);
         }
-        return overworld.getChunkSource().getDataStorage().computeIfAbsent(
-                new SavedData.Factory<>(
-                        () -> new ChestTracker(server),
-                        (tag, provider) -> ChestTracker.load(server, tag, provider),
-                        DataFixTypes.LEVEL
-                ),
-                "chunkbychunk_chest_tracker"
-        );
+        return overworld.getChunkSource().getDataStorage().computeIfAbsent(savedDataType(server));
     }
 
-    private static ChestTracker load(MinecraftServer server, CompoundTag tag, HolderLookup.Provider provider) {
-        ChestTracker tracker = new ChestTracker(server);
-        ListTag positionsTag = tag.getList("chests", CompoundTag.TAG_COMPOUND);
-        for (int i = 0; i < positionsTag.size(); i++) {
-            CompoundTag posTag = positionsTag.getCompound(i);
-            int x = posTag.getInt("x");
-            int y = posTag.getInt("y");
-            int z = posTag.getInt("z");
-            // Use immutable() to ensure we store the position correctly
-            tracker.chestPositions.add(new BlockPos(x, y, z).immutable());
-        }
-
-        ListTag playerSettingsTag = tag.getList("playerSettings", CompoundTag.TAG_COMPOUND);
-        for (int i = 0; i < playerSettingsTag.size(); i++) {
-            CompoundTag playerTag = playerSettingsTag.getCompound(i);
-            UUID playerUUID = playerTag.getUUID("uuid");
-            boolean enabled = playerTag.getBoolean("enabled");
-            tracker.playerTrackerEnabled.put(playerUUID, enabled);
-        }
-        return tracker;
+    private static SavedDataType<ChestTracker> savedDataType(MinecraftServer server) {
+        Codec<ChestTracker> codec = DATA_CODEC.xmap(
+                data -> new ChestTracker(server, data.chests, data.playerSettings),
+                tracker -> new ChestTrackerData(tracker.chestPositions, tracker.playerTrackerEnabled)
+        );
+        return new SavedDataType<>(
+                DATA_ID,
+                () -> new ChestTracker(server),
+                codec,
+                DataFixTypes.LEVEL
+        );
     }
 
     private ChestTracker(MinecraftServer server) {
         this.server = server;
     }
 
-    @Override
-    public CompoundTag save(CompoundTag tag, HolderLookup.Provider provider) {
-        ListTag positionsTag = new ListTag();
+    private ChestTracker(MinecraftServer server, Set<BlockPos> chestPositions, Map<UUID, Boolean> playerTrackerEnabled) {
+        this.server = server;
         for (BlockPos pos : chestPositions) {
-            CompoundTag posTag = new CompoundTag();
-            // Store the immutable position to ensure consistency
-            BlockPos immutablePos = pos.immutable();
-            posTag.putInt("x", immutablePos.getX());
-            posTag.putInt("y", immutablePos.getY());
-            posTag.putInt("z", immutablePos.getZ());
-            positionsTag.add(posTag);
+            this.chestPositions.add(pos.immutable());
         }
-        tag.put("chests", positionsTag);
-
-        ListTag playerSettingsTag = new ListTag();
-        for (Map.Entry<UUID, Boolean> entry : playerTrackerEnabled.entrySet()) {
-            CompoundTag playerTag = new CompoundTag();
-            playerTag.putUUID("uuid", entry.getKey());
-            playerTag.putBoolean("enabled", entry.getValue());
-            playerSettingsTag.add(playerTag);
-        }
-        tag.put("playerSettings", playerSettingsTag);
-        return tag;
+        this.playerTrackerEnabled.putAll(playerTrackerEnabled);
     }
 
     public void addChest(BlockPos pos) {
-        // Always store as immutable to prevent coordinate drift
         chestPositions.add(pos.immutable());
         setDirty();
     }
 
     public void removeChest(BlockPos pos) {
-        // Check both mutable and immutable versions to handle edge cases
         boolean removed = chestPositions.remove(pos);
         if (!removed) {
             removed = chestPositions.remove(pos.immutable());
@@ -115,7 +87,6 @@ public class ChestTracker extends SavedData {
     }
 
     public Set<BlockPos> getChestPositions() {
-        // Return immutable copies to prevent external modification
         Set<BlockPos> result = new HashSet<>();
         for (BlockPos pos : chestPositions) {
             result.add(pos.immutable());
@@ -124,7 +95,6 @@ public class ChestTracker extends SavedData {
     }
 
     public void checkAndRemoveIfEmpty(BlockPos pos, ServerLevel level) {
-        // Check with immutable position
         BlockPos immutablePos = pos.immutable();
         if (!chestPositions.contains(immutablePos)) {
             return;
@@ -158,5 +128,25 @@ public class ChestTracker extends SavedData {
 
     public boolean isTrackerEnabled(UUID playerUUID) {
         return playerTrackerEnabled.getOrDefault(playerUUID, true);
+    }
+
+    private static final class ChestTrackerData {
+        private static final Codec<ChestTrackerData> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+                BlockPos.CODEC.listOf().optionalFieldOf("chests", List.of()).forGetter(data -> List.copyOf(data.chests)),
+                Codec.unboundedMap(UUIDUtil.CODEC, Codec.BOOL).optionalFieldOf("playerSettings", Map.of()).forGetter(data -> data.playerSettings)
+        ).apply(instance, ChestTrackerData::new));
+
+        private final Set<BlockPos> chests;
+        private final Map<UUID, Boolean> playerSettings;
+
+        private ChestTrackerData(List<BlockPos> chests, Map<UUID, Boolean> playerSettings) {
+            this.chests = new HashSet<>(chests);
+            this.playerSettings = new HashMap<>(playerSettings);
+        }
+
+        private ChestTrackerData(Set<BlockPos> chests, Map<UUID, Boolean> playerSettings) {
+            this.chests = new HashSet<>(chests);
+            this.playerSettings = new HashMap<>(playerSettings);
+        }
     }
 }

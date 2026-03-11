@@ -9,19 +9,18 @@
  */
 
 package com.ryvione.chunkbychunk.client.screens;
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
-import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Inventory;
 import com.ryvione.chunkbychunk.common.ChunkByChunkConstants;
 import com.ryvione.chunkbychunk.common.menus.WorldMenderMenu;
 import com.ryvione.chunkbychunk.common.util.SpiralIterator;
 public class WorldMenderScreen extends AbstractContainerScreen<WorldMenderMenu> {
-    public static final ResourceLocation CONTAINER_TEXTURE = ResourceLocation.fromNamespaceAndPath(ChunkByChunkConstants.MOD_ID, "textures/gui/container/worldmender.png");
+    public static final Identifier CONTAINER_TEXTURE = Identifier.fromNamespaceAndPath(ChunkByChunkConstants.MOD_ID, "textures/gui/container/worldmender.png");
     private static final int MAIN_TEXTURE_DIM = 512;
     private static final float TICKS_PER_FRAME = 4f;
     private static final int NUM_FRAMES = 8;
@@ -71,14 +70,11 @@ public class WorldMenderScreen extends AbstractContainerScreen<WorldMenderMenu> 
         int frame = Mth.floor(animCounter / TICKS_PER_FRAME);
         int highlightOffsetX = imageWidth + (frame / 4) * HIGHLIGHT_SIZE;
         int highlightOffsetY = HIGHLIGHT_SIZE * (frame % 4);
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        RenderSystem.setShaderTexture(0, CONTAINER_TEXTURE);
-        guiGraphics.blit(CONTAINER_TEXTURE, leftPos, topPos, 0, 0, this.imageWidth, this.imageHeight);
+        guiGraphics.blit(RenderPipelines.GUI_TEXTURED, CONTAINER_TEXTURE, leftPos, topPos, 0, 0, this.imageWidth, this.imageHeight, MAIN_TEXTURE_DIM, MAIN_TEXTURE_DIM);
         SpiralIterator iterator = new SpiralIterator(0,0);
         for (int i = 0; i < menu.getChunksSpawned(); i++) {
             Pos blitPos = getChunkPos(iterator.getX(), iterator.getY());
-            guiGraphics.blit(CONTAINER_TEXTURE, HIGHLIGHT_INSET_X + leftPos + blitPos.x, HIGHLIGHT_INSET_Y + topPos + blitPos.y, highlightOffsetX + blitPos.x(), highlightOffsetY + blitPos.y(), 2, 2);
+            guiGraphics.blit(RenderPipelines.GUI_TEXTURED, CONTAINER_TEXTURE, HIGHLIGHT_INSET_X + leftPos + blitPos.x, HIGHLIGHT_INSET_Y + topPos + blitPos.y, highlightOffsetX + blitPos.x(), highlightOffsetY + blitPos.y(), 2, 2, MAIN_TEXTURE_DIM, MAIN_TEXTURE_DIM);
             iterator.next();
         }
     }

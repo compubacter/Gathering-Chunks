@@ -12,11 +12,10 @@ package com.ryvione.chunkbychunk.common.blocks;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import com.mojang.serialization.MapCodec;
@@ -46,8 +45,10 @@ public class BedrockChestBlock extends BaseEntityBlock {
     public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
         return new BedrockChestBlockEntity(pos, state);
     }
-    public InteractionResult use(BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult) {
-        if (level.isClientSide) {
+
+    @Override
+    protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hitResult) {
+        if (level.isClientSide()) {
             return InteractionResult.SUCCESS;
         } else if (player.isSpectator()) {
             return InteractionResult.CONSUME;
@@ -66,11 +67,17 @@ public class BedrockChestBlock extends BaseEntityBlock {
             }
         }
     }
+
+    @Override
+    protected InteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult) {
+        return useWithoutItem(state, level, pos, player, hitResult);
+    }
+
     private static int getBlockCount(Level level, ChunkPos chunkPos, int aboveY) {
         LevelChunk chunk = level.getChunk(chunkPos.x, chunkPos.z);
         int count = 0;
         for (int x = chunkPos.getMinBlockX(); x < chunkPos.getMaxBlockX(); x++) {
-            for (int y = aboveY + 1; y < level.getMaxBuildHeight(); y++) {
+            for (int y = aboveY + 1; y < level.getMaxY(); y++) {
                 for (int z = chunkPos.getMinBlockZ(); z < chunkPos.getMaxBlockZ(); z++) {
                     Block block = chunk.getBlockState(new BlockPos(x, y, z)).getBlock();
                     if (!(block instanceof AirBlock) &&
@@ -88,3 +95,5 @@ public class BedrockChestBlock extends BaseEntityBlock {
         return count;
     }
 }
+
+

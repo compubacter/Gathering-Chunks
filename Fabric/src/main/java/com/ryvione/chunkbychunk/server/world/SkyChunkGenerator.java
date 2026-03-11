@@ -13,11 +13,10 @@ import com.google.common.collect.ImmutableMap;
 import com.mojang.serialization.Lifecycle;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.minecraft.Util;
 import net.minecraft.core.*;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.WorldGenRegion;
-import net.minecraft.util.random.WeightedRandomList;
+import net.minecraft.util.random.WeightedList;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.level.*;
 import net.minecraft.world.level.biome.*;
@@ -132,7 +131,7 @@ public class SkyChunkGenerator extends ChunkGenerator {
         return CODEC;
     }
     @Override
-    public void applyCarvers(WorldGenRegion region, long seed, RandomState randomState, BiomeManager biomeManager, StructureManager structureManager, ChunkAccess chunk, net.minecraft.world.level.levelgen.GenerationStep.Carving carving) {
+    public void applyCarvers(WorldGenRegion region, long seed, RandomState randomState, BiomeManager biomeManager, StructureManager structureManager, ChunkAccess chunk) {
     }
     @Override
     public CompletableFuture<ChunkAccess> fillFromNoise(Blender blender, RandomState randomState, StructureManager structureManager, ChunkAccess chunk) {
@@ -141,22 +140,22 @@ public class SkyChunkGenerator extends ChunkGenerator {
                 BlockPos.MutableBlockPos blockPos = new BlockPos.MutableBlockPos(0, 0, 0);
                 for (blockPos.setZ(0); blockPos.getZ() < 16; blockPos.setZ(blockPos.getZ() + 1)) {
                     for (blockPos.setX(0); blockPos.getX() < 16; blockPos.setX(blockPos.getX() + 1)) {
-                        blockPos.setY(chunkAccess.getMaxBuildHeight() - 1);
-                        while (blockPos.getY() > chunkAccess.getMinBuildHeight() && chunkAccess.getBlockState(blockPos).getBlock() instanceof AirBlock) {
+                        blockPos.setY(chunkAccess.getMaxY() - 1);
+                        while (blockPos.getY() > chunkAccess.getMinY() && chunkAccess.getBlockState(blockPos).getBlock() instanceof AirBlock) {
                             blockPos.setY(blockPos.getY() - 1);
                         }
                         if (sealCoverBlock != null) {
                             blockPos.setY(blockPos.getY() + 1);
-                            chunkAccess.setBlockState(blockPos, sealCoverBlock.defaultBlockState(), false);
+                            chunkAccess.setBlockState(blockPos, sealCoverBlock.defaultBlockState(), 0);
                             blockPos.setY(blockPos.getY() - 1);
                         }
-                        while (blockPos.getY() > chunkAccess.getMinBuildHeight() + 1) {
-                            chunkAccess.setBlockState(blockPos, sealBlock.defaultBlockState(), false);
+                        while (blockPos.getY() > chunkAccess.getMinY() + 1) {
+                            chunkAccess.setBlockState(blockPos, sealBlock.defaultBlockState(), 0);
                             blockPos.setY(blockPos.getY() - 1);
                         }
-                        chunkAccess.setBlockState(blockPos, Blocks.BEDROCK.defaultBlockState(), false);
+                        chunkAccess.setBlockState(blockPos, Blocks.BEDROCK.defaultBlockState(), 0);
                         blockPos.setY(blockPos.getY() - 1);
-                        chunkAccess.setBlockState(blockPos, Blocks.VOID_AIR.defaultBlockState(), false);
+                        chunkAccess.setBlockState(blockPos, Blocks.VOID_AIR.defaultBlockState(), 0);
                     }
                 }
             });
@@ -164,12 +163,12 @@ public class SkyChunkGenerator extends ChunkGenerator {
                 BlockPos.MutableBlockPos blockPos = new BlockPos.MutableBlockPos(0, 0, 0);
                 for (blockPos.setZ(0); blockPos.getZ() < 16; blockPos.setZ(blockPos.getZ() + 1)) {
                     for (blockPos.setX(0); blockPos.getX() < 16; blockPos.setX(blockPos.getX() + 1)) {
-                        blockPos.setY(chunkAccess.getMinBuildHeight());
-                        chunkAccess.setBlockState(blockPos, Blocks.LAVA.defaultBlockState(), false);
-                        blockPos.setY(chunkAccess.getMinBuildHeight() + 1);
-                        chunkAccess.setBlockState(blockPos, Blocks.LAVA.defaultBlockState(), false);
+                        blockPos.setY(chunkAccess.getMinY());
+                        chunkAccess.setBlockState(blockPos, Blocks.LAVA.defaultBlockState(), 0);
+                        blockPos.setY(chunkAccess.getMinY() + 1);
+                        chunkAccess.setBlockState(blockPos, Blocks.LAVA.defaultBlockState(), 0);
                         blockPos.setY(127);
-                        chunkAccess.setBlockState(blockPos, Blocks.BEDROCK.defaultBlockState(), false);
+                        chunkAccess.setBlockState(blockPos, Blocks.BEDROCK.defaultBlockState(), 0);
                     }
                 }
             });
@@ -181,10 +180,8 @@ public class SkyChunkGenerator extends ChunkGenerator {
         if (unspawnedBiome == null) {
             return parent.createBiomes(randomState, blender, structureManager, chunk);
         } else {
-            return CompletableFuture.supplyAsync(Util.wrapThreadWithTaskName("init_biomes", () -> {
-                chunk.fillBiomesFromNoise((var1, var2, var3, var4) -> unspawnedBiome, randomState.sampler());
-                return chunk;
-            }), Util.backgroundExecutor());
+            chunk.fillBiomesFromNoise((var1, var2, var3, var4) -> unspawnedBiome, randomState.sampler());
+            return CompletableFuture.completedFuture(chunk);
         }
     }
     public void applyBiomeDecoration(WorldGenLevel level, ChunkAccess chunk, StructureManager structureManager) {
@@ -208,7 +205,7 @@ public class SkyChunkGenerator extends ChunkGenerator {
         return parent.getGenDepth();
     }
     @Override
-    public WeightedRandomList<MobSpawnSettings.SpawnerData> getMobsAt(Holder<Biome> biome, StructureManager structureManager, MobCategory mobCategory, BlockPos pos) {
+    public WeightedList<MobSpawnSettings.SpawnerData> getMobsAt(Holder<Biome> biome, StructureManager structureManager, MobCategory mobCategory, BlockPos pos) {
         return parent.getMobsAt(biome, structureManager, mobCategory, pos);
     }
     @Override
@@ -243,3 +240,5 @@ public class SkyChunkGenerator extends ChunkGenerator {
         return ChunkGeneratorAccess.getPlacementsForFeature(parent, structure);
     }
 }
+
+

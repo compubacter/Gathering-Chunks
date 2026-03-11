@@ -9,7 +9,6 @@
  */
 
 package com.ryvione.chunkbychunk.mixins;
-import com.mojang.datafixers.DataFixer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.protocol.game.ClientboundLevelChunkWithLightPacket;
 import net.minecraft.server.level.ChunkHolder;
@@ -20,8 +19,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.LevelChunk;
-import net.minecraft.world.level.chunk.storage.ChunkStorage;
-import net.minecraft.world.level.chunk.storage.RegionStorageInfo;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -32,19 +29,13 @@ import com.ryvione.chunkbychunk.server.world.ChunkSpawnController;
 import com.ryvione.chunkbychunk.server.world.ControllableChunkMap;
 import com.ryvione.chunkbychunk.config.ChunkByChunkConfig;
 import javax.annotation.Nullable;
-import java.nio.file.Path;
 import java.util.BitSet;
 import java.util.List;
 @Mixin(ChunkMap.class)
-public abstract class ChunkMapMixin extends ChunkStorage implements ControllableChunkMap {
-    public ChunkMapMixin(RegionStorageInfo $$0, Path $$1, DataFixer $$2, boolean $$3) {
-        super($$0, $$1, $$2, $$3);
-    }
+public abstract class ChunkMapMixin implements ControllableChunkMap {
     @Final
     @Shadow
     ServerLevel level;
-    @Shadow
-    protected abstract Iterable<ChunkHolder> getChunks();
     @Shadow
     @Nullable
     protected abstract ChunkHolder getVisibleChunkIfPresent(long pos);
@@ -73,9 +64,10 @@ public abstract class ChunkMapMixin extends ChunkStorage implements Controllable
         if (ChunkByChunkConfig.get().getGeneration().isSpawnChunkStrip()
                 && status.isOrAfter(FullChunkStatus.ENTITY_TICKING)
                 && level.dimension().equals(Level.OVERWORLD)
-                && new ChunkPos(level.getSharedSpawnPos()).x == pos.x) {
-            BlockPos blockPos = pos.getMiddleBlockPosition(level.getMaxBuildHeight() - 1);
+                && new ChunkPos(level.getLevelData().getRespawnData().pos()).x == pos.x) {
+            BlockPos blockPos = pos.getMiddleBlockPosition(level.getMaxY() - 1);
             ChunkSpawnController.get(level.getServer()).request(level, "", false, blockPos);
         }
     }
 }
+

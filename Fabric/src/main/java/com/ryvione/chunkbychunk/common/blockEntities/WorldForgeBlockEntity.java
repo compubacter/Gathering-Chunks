@@ -12,12 +12,9 @@ package com.ryvione.chunkbychunk.common.blockEntities;
 import com.google.common.collect.ImmutableMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -26,6 +23,8 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import com.ryvione.chunkbychunk.common.menus.WorldForgeMenu;
 import com.ryvione.chunkbychunk.config.ChunkByChunkConfig;
 import com.ryvione.chunkbychunk.interop.Services;
@@ -45,9 +44,9 @@ public class WorldForgeBlockEntity extends BaseFueledBlockEntity {
     public static final Map<Item, Item> CRYSTAL_STEPS;
     private static final int[] SLOTS_FOR_UP = new int[]{SLOT_INPUT};
     private static final int[] SLOTS_FOR_DOWN = new int[]{SLOT_RESULT};
-    private static final TagKey<Item> SOIL_FUEL_TAG = TagKey.create(Registries.ITEM, ResourceLocation.parse("chunkbychunk:weakworldforgefuel"));
-    private static final TagKey<Item> STONE_FUEL_TAG = TagKey.create(Registries.ITEM, ResourceLocation.parse("chunkbychunk:worldforgefuel"));
-    private static final TagKey<Item> STRONG_FUEL_TAG = TagKey.create(Registries.ITEM, ResourceLocation.parse("chunkbychunk:strongworldforgefuel"));
+    private static final TagKey<Item> SOIL_FUEL_TAG = TagKey.create(Registries.ITEM, Identifier.parse("chunkbychunk:weakworldforgefuel"));
+    private static final TagKey<Item> STONE_FUEL_TAG = TagKey.create(Registries.ITEM, Identifier.parse("chunkbychunk:worldforgefuel"));
+    private static final TagKey<Item> STRONG_FUEL_TAG = TagKey.create(Registries.ITEM, Identifier.parse("chunkbychunk:strongworldforgefuel"));
     private int progress;
     private int goal;
     protected final ContainerData dataAccess = new ContainerData() {
@@ -102,13 +101,13 @@ public class WorldForgeBlockEntity extends BaseFueledBlockEntity {
         return FUEL.get(itemStack.getItem()) != null || itemStack.is(SOIL_FUEL_TAG) || itemStack.is(STONE_FUEL_TAG) || itemStack.is(STRONG_FUEL_TAG);
     }
     @Override
-    protected void loadAdditional(CompoundTag tag, HolderLookup.Provider provider) {
-        super.loadAdditional(tag, provider);
-        this.progress = tag.getInt("Progress");
+    protected void loadAdditional(ValueInput tag) {
+        super.loadAdditional(tag);
+        this.progress = tag.getIntOr("Progress", 0);
     }
     @Override
-    protected void saveAdditional(CompoundTag tag, HolderLookup.Provider provider) {
-        super.saveAdditional(tag, provider);
+    protected void saveAdditional(ValueOutput tag) {
+        super.saveAdditional(tag);
         tag.putInt("Progress", this.progress);
     }
     public static void serverTick(Level level, BlockPos blockPos, BlockState blockState, WorldForgeBlockEntity entity) {
@@ -165,3 +164,6 @@ public class WorldForgeBlockEntity extends BaseFueledBlockEntity {
         return super.canPlaceItem(slot, item);
     }
 }
+
+
+

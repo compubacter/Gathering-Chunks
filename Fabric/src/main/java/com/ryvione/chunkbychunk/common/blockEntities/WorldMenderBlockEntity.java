@@ -11,17 +11,14 @@
 package com.ryvione.chunkbychunk.common.blockEntities;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.network.chat.Component;
 import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.WorldlyContainer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.player.StackedContents;
+import net.minecraft.world.entity.player.StackedItemContents;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.inventory.StackedContentsCompatible;
@@ -31,6 +28,8 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BaseContainerBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import com.ryvione.chunkbychunk.common.blocks.SpawnChunkBlock;
 import com.ryvione.chunkbychunk.common.menus.WorldMenderMenu;
 import com.ryvione.chunkbychunk.common.util.SpiralIterator;
@@ -88,7 +87,7 @@ public class WorldMenderBlockEntity extends BaseContainerBlockEntity implements 
                 ChunkPos chunkPos = new ChunkPos(spiralIterator.getX(), spiralIterator.getY());
                 if (SpawnChunkHelper.isEmptyChunk(level, chunkPos)) {
                     entity.chunksSpawned = chunksSpawned + 1;
-                    BlockPos pos = chunkPos.getMiddleBlockPosition(level.getMaxBuildHeight() - 1);
+                    BlockPos pos = chunkPos.getMiddleBlockPosition(level.getMaxY() - 1);
                     SpawnChunkBlock spawnChunkBlock = entity.getInputChunkBlock();
                     if (ChunkSpawnController.get(serverLevel.getServer()).request(serverLevel, spawnChunkBlock.getBiomeTheme(), spawnChunkBlock.isRandom(), pos)) {
                         entity.getItem(SLOT_INPUT).shrink(1);
@@ -177,7 +176,7 @@ public class WorldMenderBlockEntity extends BaseContainerBlockEntity implements 
         return true;
     }
     @Override
-    public void fillStackedContents(StackedContents contents) {
+    public void fillStackedContents(StackedItemContents contents) {
         for (ItemStack itemstack : items) {
             contents.accountStack(itemstack);
         }
@@ -201,17 +200,17 @@ public class WorldMenderBlockEntity extends BaseContainerBlockEntity implements 
         }
     }
     @Override
-    protected void loadAdditional(CompoundTag tag, HolderLookup.Provider provider) {
-        super.loadAdditional(tag, provider);
-        this.cooldown = tag.getInt("Cooldown");
+    protected void loadAdditional(ValueInput tag) {
+        super.loadAdditional(tag);
+        this.cooldown = tag.getIntOr("Cooldown", 0);
         this.items = NonNullList.withSize(this.getContainerSize(), ItemStack.EMPTY);
-        this.chunksSpawned = tag.getInt("ChunksSpawned");
-        ContainerHelper.loadAllItems(tag, this.items, provider);
+        this.chunksSpawned = tag.getIntOr("ChunksSpawned", 0);
+        ContainerHelper.loadAllItems(tag, this.items);
     }
     @Override
-    protected void saveAdditional(CompoundTag tag, HolderLookup.Provider provider) {
-        super.saveAdditional(tag, provider);
-        ContainerHelper.saveAllItems(tag, this.items, provider);
+    protected void saveAdditional(ValueOutput tag) {
+        super.saveAdditional(tag);
+        ContainerHelper.saveAllItems(tag, this.items);
         tag.putInt("Cooldown", cooldown);
         tag.putInt("ChunksSpawned", chunksSpawned);
     }
@@ -220,3 +219,5 @@ public class WorldMenderBlockEntity extends BaseContainerBlockEntity implements 
         return this.items;
     }
 }
+
+

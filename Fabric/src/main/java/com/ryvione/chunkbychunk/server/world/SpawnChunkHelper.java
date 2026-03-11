@@ -29,7 +29,7 @@ public final class SpawnChunkHelper {
     }
 
     public static boolean isEmptyChunk(LevelAccessor level, ChunkPos chunkPos) {
-        BlockPos bedrockCheckBlock = chunkPos.getMiddleBlockPosition(level.getMinBuildHeight());
+        BlockPos bedrockCheckBlock = chunkPos.getMiddleBlockPosition(level.getMinY());
         return !Blocks.BEDROCK.equals(level.getBlockState(bedrockCheckBlock).getBlock());
     }
 

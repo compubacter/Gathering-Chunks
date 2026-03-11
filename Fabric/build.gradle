@@ -1,5 +1,5 @@
 plugins {
-    id 'fabric-loom' version '1.9-SNAPSHOT'
+    id 'fabric-loom' version '1.14.5'
     id 'maven-publish'
     id 'idea'
 }
@@ -7,12 +7,18 @@ plugins {
 version = rootProject.version
 group = rootProject.group
 
-archivesBaseName = "${mod_name}-fabric-${minecraft_version}"
+base {
+    archivesName = "${mod_name}-fabric-${minecraft_version}"
+}
 
 repositories {
     maven {
         name = "Terraformers SMC"
         url = "https://maven.terraformersmc.com/releases"
+    }
+    maven {
+        name = "BlameJared"
+        url = "https://maven.blamejared.com"
     }
 }
 
@@ -23,7 +29,6 @@ dependencies {
     }
     modImplementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
-    modImplementation "com.terraformersmc:modmenu:11.0.2"
     implementation group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.1'
 
     modCompileOnlyApi("mezz.jei:jei-${minecraft_version}-common-api:${jei_version}")
@@ -88,7 +93,7 @@ publishing {
     publications {
         mavenJava(MavenPublication) {
             groupId project.group
-            artifactId project.archivesBaseName
+            artifactId project.base.archivesName.get()
             version project.version
             from components.java
         }

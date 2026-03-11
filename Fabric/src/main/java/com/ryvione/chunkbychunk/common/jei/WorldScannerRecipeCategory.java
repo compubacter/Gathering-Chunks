@@ -21,7 +21,7 @@ import mezz.jei.api.recipe.RecipeIngredientRole;
 import mezz.jei.api.recipe.RecipeType;
 import mezz.jei.api.recipe.category.IRecipeCategory;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import com.ryvione.chunkbychunk.common.ChunkByChunkConstants;
 import com.ryvione.chunkbychunk.common.util.SpiralIterator;
@@ -29,7 +29,7 @@ import com.ryvione.chunkbychunk.config.ChunkByChunkConfig;
 import com.ryvione.chunkbychunk.interop.Services;
 import java.util.Collections;
 public class WorldScannerRecipeCategory implements IRecipeCategory<WorldScannerRecipe> {
-    private static final ResourceLocation BACKGROUND_TEXTURE = ResourceLocation.fromNamespaceAndPath(ChunkByChunkConstants.MOD_ID, "textures/gui/container/worldscannerjei.png");
+    private static final Identifier BACKGROUND_TEXTURE = Identifier.fromNamespaceAndPath(ChunkByChunkConstants.MOD_ID, "textures/gui/container/worldscannerjei.png");
     private final IDrawable icon;
     private final IDrawable background;
     private final IDrawableStatic scanSquare;
@@ -42,7 +42,7 @@ public class WorldScannerRecipeCategory implements IRecipeCategory<WorldScannerR
     public RecipeType<WorldScannerRecipe> getRecipeType() {
         return CBCJeiPlugin.WORLD_SCANNER;
     }
-    public ResourceLocation getUid() {
+    public Identifier getUid() {
         return getRecipeType().getUid();
     }
     public Class<? extends WorldScannerRecipe> getRecipeClass() {
@@ -85,6 +85,6 @@ public class WorldScannerRecipeCategory implements IRecipeCategory<WorldScannerR
     @Override
     public void setRecipe(IRecipeLayoutBuilder builder, WorldScannerRecipe recipe, IFocusGroup focuses) {
         builder.addSlot(RecipeIngredientRole.INPUT, 14, 28).setSlotName("Input").addIngredients(VanillaTypes.ITEM_STACK, Collections.singletonList(recipe.getItem()));
-        builder.addInvisibleIngredients(RecipeIngredientRole.CATALYST).addItemStack(Services.PLATFORM.worldScannerBlockItem().getDefaultInstance());
+        builder.addInvisibleIngredients(RecipeIngredientRole.CRAFTING_STATION).addItemStack(Services.PLATFORM.worldScannerBlockItem().getDefaultInstance());
     }
 }

@@ -1,8 +1,8 @@
-{
+﻿{
   "parent" : "chunkbychunk:worldforgeobtained",
   "display": {
     "icon": {
-      "item": "chunkbychunk:worldfragment"
+      "id": "chunkbychunk:worldfragment"
     },
     "title": {
       "translate" : "advancement.chunkbychunk.worldfragmentobtained.title"

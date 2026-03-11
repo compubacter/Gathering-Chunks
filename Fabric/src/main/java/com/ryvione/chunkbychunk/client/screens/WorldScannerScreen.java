@@ -9,28 +9,23 @@
  */
 
 package com.ryvione.chunkbychunk.client.screens;
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.MapRenderer;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
-import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.level.saveddata.maps.MapId;
-import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
 import com.ryvione.chunkbychunk.common.ChunkByChunkConstants;
 import com.ryvione.chunkbychunk.common.blockEntities.WorldScannerBlockEntity;
 import com.ryvione.chunkbychunk.common.menus.WorldScannerMenu;
 public class WorldScannerScreen extends AbstractContainerScreen<WorldScannerMenu> {
-    private static final ResourceLocation CONTAINER_TEXTURE = ResourceLocation.fromNamespaceAndPath(ChunkByChunkConstants.MOD_ID, "textures/gui/container/worldscanner.png");
+    private static final Identifier CONTAINER_TEXTURE = Identifier.fromNamespaceAndPath(ChunkByChunkConstants.MOD_ID, "textures/gui/container/worldscanner.png");
     private static final int MAIN_TEXTURE_DIM = 512;
     private static final int MAP_DIMENSIONS = 128;
     private static final float TICKS_PER_FRAME = 4f;
     private static final int NUM_FRAMES = 8;
     private float animCounter = 0.f;
-    private MapRenderer mapRenderer;
     public WorldScannerScreen(WorldScannerMenu menu, Inventory inventory, Component component) {
         super(menu, inventory, component);
         imageWidth = 310;
@@ -39,7 +34,6 @@ public class WorldScannerScreen extends AbstractContainerScreen<WorldScannerMenu
     @Override
     protected void init() {
         super.init();
-        mapRenderer = minecraft.gameRenderer.getMapRenderer();
     }
     @Override
     public void onClose() {
@@ -75,7 +69,7 @@ public class WorldScannerScreen extends AbstractContainerScreen<WorldScannerMenu
                 builder.append(" E");
             }
             if (builder.length() > 0) {
-                guiGraphics.renderTooltip(this.font, Component.literal(builder.toString()), cursorX, cursorY);
+                guiGraphics.setTooltipForNextFrame(this.font, Component.literal(builder.toString()), cursorX, cursorY);
             }
         }
     }
@@ -86,29 +80,11 @@ public class WorldScannerScreen extends AbstractContainerScreen<WorldScannerMenu
             animCounter -= TICKS_PER_FRAME * NUM_FRAMES;
         }
         int frame = Mth.floor(animCounter / TICKS_PER_FRAME);
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        guiGraphics.blit(CONTAINER_TEXTURE, leftPos, topPos, 0, 0, this.imageWidth, this.imageHeight);
+        guiGraphics.blit(RenderPipelines.GUI_TEXTURED, CONTAINER_TEXTURE, leftPos, topPos, 0, 0, this.imageWidth, this.imageHeight, MAIN_TEXTURE_DIM, MAIN_TEXTURE_DIM);
         if (menu.getEnergy() > 0) {
             int display = Mth.ceil(7.f * menu.getEnergy() / menu.getMaxEnergy());
-            guiGraphics.blit(CONTAINER_TEXTURE, leftPos + 54, topPos + 56, 128 + 12 * display, 166 + 12 * frame, 13, 13);
+            guiGraphics.blit(RenderPipelines.GUI_TEXTURED, CONTAINER_TEXTURE, leftPos + 54, topPos + 56, 128 + 12 * display, 166 + 12 * frame, 13, 13, MAIN_TEXTURE_DIM, MAIN_TEXTURE_DIM);
         }
-        if (menu.isMapAvailable()) {
-            renderMap(guiGraphics);
-        }
-        guiGraphics.blit(CONTAINER_TEXTURE, leftPos + 234, topPos + 78, 124, 166 + frame * 4, 4, 4);
-    }
-    private void renderMap(GuiGraphics guiGraphics) {
-        guiGraphics.pose().pushPose();
-        guiGraphics.pose().translate(leftPos + 174, topPos + 18, 1.0D);
-        MapId mapId = menu.getMapId();
-        if (mapId != null) {
-            MapItemSavedData mapData = this.minecraft.level.getMapData(mapId);
-            if (mapData != null) {
-                mapRenderer.render(guiGraphics.pose(), guiGraphics.bufferSource(), mapId, mapData, true, 0xFFFFFF);
-            }
-        }
-        guiGraphics.flush();
-        guiGraphics.pose().popPose();
+        guiGraphics.blit(RenderPipelines.GUI_TEXTURED, CONTAINER_TEXTURE, leftPos + 234, topPos + 78, 124, 166 + frame * 4, 4, 4, MAIN_TEXTURE_DIM, MAIN_TEXTURE_DIM);
     }
 }

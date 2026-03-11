@@ -1,8 +1,8 @@
-{
+﻿{
   "parent": "chunkbychunk:chunkspawnerobtained",
   "display": {
     "icon": {
-      "item": "chunkbychunk:worldmender"
+      "id": "chunkbychunk:worldmender"
     },
     "title": {
       "translate": "advancement.chunkbychunk.worldmenderobtained.title"

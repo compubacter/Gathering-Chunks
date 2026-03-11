@@ -1,17 +1,17 @@
-{
-  "type" : "minecraft:crafting_shaped",
-  "pattern": [
-    "ss ",
-    "ss ",
-    "   "
-  ],
-  "key" : {
-    "s" : {
-      "item": "chunkbychunk:worldfragment"
-    }
-  },
-  "result" : {
-    "id" : "chunkbychunk:worldshard",
-    "count" : 1
-  }
+﻿{
+    "type":  "minecraft:crafting_shaped",
+    "pattern":  [
+                    "ss ",
+                    "ss ",
+                    "   "
+                ],
+    "key":  {
+                "s":  "chunkbychunk:worldfragment"
+            },
+    "result":  {
+                   "id":  "chunkbychunk:worldshard",
+                   "count":  1
+               }
 }
+
+

@@ -12,7 +12,7 @@ package com.ryvione.chunkbychunk.common.data;
 import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import com.ryvione.chunkbychunk.common.ChunkByChunkConstants;
@@ -29,7 +29,7 @@ public class ScannerData {
         this.inputItems.addAll(items);
         this.targetBlocks.addAll(blocks);
     }
-    public void process(ResourceLocation context, RegistryAccess registryAccess) {
+    public void process(Identifier context, RegistryAccess registryAccess) {
         if (registryAccess == null) {
             ChunkByChunkConstants.LOGGER.warn("Cannot process scanner data '{}' without RegistryAccess", context);
             return;
@@ -43,11 +43,11 @@ public class ScannerData {
             ChunkByChunkConstants.LOGGER.error("Invalid scanner data '{}', missing source items or target blocks", context);
         }
     }
-    private Set<Block> getTargetBlocks(ResourceLocation context, RegistryAccess registryAccess) {
-        Registry<Block> blockRegistry = registryAccess.registryOrThrow(Registries.BLOCK);
+    private Set<Block> getTargetBlocks(Identifier context, RegistryAccess registryAccess) {
+        Registry<Block> blockRegistry = registryAccess.lookupOrThrow(Registries.BLOCK);
         return targetBlocks.stream()
                 .map(x -> {
-                    ResourceLocation loc = ResourceLocation.tryParse(x);
+                    Identifier loc = Identifier.tryParse(x);
                     if (loc == null) {
                         ChunkByChunkConstants.LOGGER.warn("Invalid block location {} in scanner data {}", x, context);
                         return Optional.<Block>empty();
@@ -62,11 +62,11 @@ public class ScannerData {
                 .map(Optional::get)
                 .collect(Collectors.toSet());
     }
-    private Set<Item> getInputItems(ResourceLocation context, RegistryAccess registryAccess) {
-        Registry<Item> itemRegistry = registryAccess.registryOrThrow(Registries.ITEM);
+    private Set<Item> getInputItems(Identifier context, RegistryAccess registryAccess) {
+        Registry<Item> itemRegistry = registryAccess.lookupOrThrow(Registries.ITEM);
         return inputItems.stream()
                 .map(x -> {
-                    ResourceLocation loc = ResourceLocation.tryParse(x);
+                    Identifier loc = Identifier.tryParse(x);
                     if (loc == null) {
                         ChunkByChunkConstants.LOGGER.warn("Invalid item location {} in scanner data {}", x, context);
                         return Optional.<Item>empty();
@@ -82,3 +82,5 @@ public class ScannerData {
                 .collect(Collectors.toSet());
     }
 }
+
+

@@ -9,17 +9,17 @@
  */
 
 package com.ryvione.chunkbychunk.client.screens;
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
-import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Inventory;
 import com.ryvione.chunkbychunk.common.ChunkByChunkConstants;
 import com.ryvione.chunkbychunk.common.menus.BedrockChestMenu;
 public class BedrockChestScreen extends AbstractContainerScreen<BedrockChestMenu> {
-    private static final ResourceLocation CONTAINER_TEXTURE = ResourceLocation.fromNamespaceAndPath(ChunkByChunkConstants.MOD_ID, "textures/gui/container/bedrockchest.png");
+    private static final Identifier CONTAINER_TEXTURE = Identifier.fromNamespaceAndPath(ChunkByChunkConstants.MOD_ID, "textures/gui/container/bedrockchest.png");
+    private static final int MAIN_TEXTURE_DIM = 256;
     public BedrockChestScreen(BedrockChestMenu menu, Inventory inventory, Component component) {
         super(menu, inventory, component);
     }
@@ -31,9 +31,6 @@ public class BedrockChestScreen extends AbstractContainerScreen<BedrockChestMenu
     }
     @Override
     protected void renderBg(GuiGraphics guiGraphics, float p_99245_, int p_99246_, int p_99247_) {
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        RenderSystem.setShaderTexture(0, CONTAINER_TEXTURE);
-        guiGraphics.blit(CONTAINER_TEXTURE, this.leftPos, this.topPos, 0, 0, this.imageWidth, this.imageHeight);
+        guiGraphics.blit(RenderPipelines.GUI_TEXTURED, CONTAINER_TEXTURE, this.leftPos, this.topPos, 0, 0, this.imageWidth, this.imageHeight, MAIN_TEXTURE_DIM, MAIN_TEXTURE_DIM);
     }
 }

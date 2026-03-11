@@ -1,23 +1,19 @@
-{
-  "type" : "minecraft:crafting_shaped",
-  "pattern": [
-    "rCr",
-    "CXC",
-    "rCr"
-  ],
-  "key" : {
-    "r" : {
-      "tag": "minecraft:stone_crafting_materials"
-    },
-    "C" : {
-      "item": "minecraft:copper_ingot"
-    },
-    "X" : {
-      "item": "chunkbychunk:worldcore"
-    }
-  },
-  "result" : {
-    "id" : "chunkbychunk:rockychunkspawner",
-    "count" : 1
-  }
+﻿{
+    "type":  "minecraft:crafting_shaped",
+    "pattern":  [
+                    "rCr",
+                    "CXC",
+                    "rCr"
+                ],
+    "key":  {
+                "r":  "#minecraft:stone_crafting_materials",
+                "C":  "minecraft:copper_ingot",
+                "X":  "chunkbychunk:worldcore"
+            },
+    "result":  {
+                   "id":  "chunkbychunk:rockychunkspawner",
+                   "count":  1
+               }
 }
+
+

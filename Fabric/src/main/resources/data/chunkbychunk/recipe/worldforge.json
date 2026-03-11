@@ -1,20 +1,18 @@
-{
-  "type" : "minecraft:crafting_shaped",
-  "pattern": [
-    "sss",
-    "scs",
-    "sss"
-  ],
-  "key" : {
-    "s" : {
-      "tag": "minecraft:stone_crafting_materials"
-    },
-    "c" : {
-      "item": "chunkbychunk:worldcore"
-    }
-  },
-  "result" : {
-    "id" : "chunkbychunk:worldforge",
-    "count" : 1
-  }
+﻿{
+    "type":  "minecraft:crafting_shaped",
+    "pattern":  [
+                    "sss",
+                    "scs",
+                    "sss"
+                ],
+    "key":  {
+                "s":  "#minecraft:stone_crafting_materials",
+                "c":  "chunkbychunk:worldcore"
+            },
+    "result":  {
+                   "id":  "chunkbychunk:worldforge",
+                   "count":  1
+               }
 }
+
+

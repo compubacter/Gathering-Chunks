@@ -44,6 +44,7 @@ public class WorldForgeBlock extends AbstractContainerBlock {
     }
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> entityType) {
-        return level.isClientSide ? null : createTickerHelper(entityType, Services.PLATFORM.worldForgeEntity(), WorldForgeBlockEntity::serverTick);
+        return level.isClientSide() ? null : createTickerHelper(entityType, Services.PLATFORM.worldForgeEntity(), WorldForgeBlockEntity::serverTick);
     }
 }
+

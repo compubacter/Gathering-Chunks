@@ -1,8 +1,8 @@
-{
+﻿{
   "parent": "chunkbychunk:worldcoreobtained",
   "display": {
     "icon": {
-      "item": "chunkbychunk:worldscanner"
+      "id": "chunkbychunk:worldscanner"
     },
     "title": {
       "translate": "advancement.chunkbychunk.worldscannerobtained.title"

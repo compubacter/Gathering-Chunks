@@ -14,8 +14,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.server.level.ServerLevel;
@@ -35,6 +33,9 @@ import net.minecraft.world.level.material.FlowingFluid;
 import net.minecraft.world.level.material.MapColor;
 import net.minecraft.world.level.saveddata.maps.MapId;
 import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
+import net.minecraft.nbt.CompoundTag;
 import com.ryvione.chunkbychunk.common.data.ScannerData;
 import com.ryvione.chunkbychunk.common.menus.WorldScannerMenu;
 import com.ryvione.chunkbychunk.common.util.ChunkUtil;
@@ -141,19 +142,19 @@ public class WorldScannerBlockEntity extends BaseFueledBlockEntity {
     }
 
     @Override
-    protected void loadAdditional(CompoundTag tag, HolderLookup.Provider provider) {
-        super.loadAdditional(tag, provider);
-        int mapId = tag.getInt("Map");
+    protected void loadAdditional(ValueInput tag) {
+        super.loadAdditional(tag);
+        int mapId = tag.getIntOr("Map", 0);
         map = mapId == NO_MAP ? null : new MapId(mapId);
-        scanIterator.load(tag.getCompound("ScanIterator"));
-        scanCharge = tag.getInt("ScanCharge");
+        tag.read("ScanIterator", CompoundTag.CODEC).ifPresent(scanIterator::load);
+        scanCharge = tag.getIntOr("ScanCharge", 0);
     }
 
     @Override
-    protected void saveAdditional(CompoundTag tag, HolderLookup.Provider provider) {
-        super.saveAdditional(tag, provider);
+    protected void saveAdditional(ValueOutput tag) {
+        super.saveAdditional(tag);
         tag.putInt("Map", map != null ? map.id() : NO_MAP);
-        tag.put("ScanIterator", scanIterator.createTag());
+        tag.store("ScanIterator", CompoundTag.CODEC, scanIterator.createTag());
         tag.putInt("ScanCharge", scanCharge);
     }
 
@@ -381,3 +382,4 @@ public class WorldScannerBlockEntity extends BaseFueledBlockEntity {
         }
     }
 }
+

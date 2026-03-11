@@ -1,20 +1,18 @@
-{
-  "type" : "minecraft:crafting_shaped",
-  "pattern": [
-    " s ",
-    "scs",
-    " s "
-  ],
-  "key" : {
-    "s" : {
-      "item": "minecraft:dispenser"
-    },
-    "c" : {
-      "item": "chunkbychunk:worldcore"
-    }
-  },
-  "result" : {
-    "id" : "chunkbychunk:worldmender",
-    "count" : 1
-  }
+﻿{
+    "type":  "minecraft:crafting_shaped",
+    "pattern":  [
+                    " s ",
+                    "scs",
+                    " s "
+                ],
+    "key":  {
+                "s":  "minecraft:dispenser",
+                "c":  "chunkbychunk:worldcore"
+            },
+    "result":  {
+                   "id":  "chunkbychunk:worldmender",
+                   "count":  1
+               }
 }
+
+

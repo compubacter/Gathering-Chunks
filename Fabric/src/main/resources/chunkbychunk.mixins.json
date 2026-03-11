@@ -2,8 +2,7 @@
   "required": true,
   "minVersion": "0.8",
   "package": "com.ryvione.chunkbychunk.mixins",
-  "compatibilityLevel": "JAVA_17",
-  "refmap": "ChunkByChunk-fabric-1.21.1-refmap.json",
+  "compatibilityLevel": "JAVA_21",
   "mixins": [
     "EntityChangeDimensionMixin",
     "BucketFluidAccessor",

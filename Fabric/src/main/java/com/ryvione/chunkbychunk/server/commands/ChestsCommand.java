@@ -22,7 +22,7 @@ import java.util.Set;
 public class ChestsCommand {
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("chests")
-                .requires(source -> source.hasPermission(0))
+                .requires(Commands.hasPermission(Commands.LEVEL_ALL))
                 .executes(ChestsCommand::listChests)
                 .then(Commands.literal("tracker")
                         .then(Commands.literal("enable")
@@ -54,7 +54,7 @@ public class ChestsCommand {
             source.sendSuccess(() -> Component.literal("No available chests found in this dimension."), false);
             return 0;
         }
-        source.sendSuccess(() -> Component.literal("Available chests in " + level.dimension().location() + " (" + dimensionChests.size() + "):"), false);
+        source.sendSuccess(() -> Component.literal("Available chests in " + level.dimension().identifier() + " (" + dimensionChests.size() + "):"), false);
         for (BlockPos pos : dimensionChests) {
             Component message = Component.literal("  X=" + pos.getX() + " Y=" + pos.getY() + " Z=" + pos.getZ());
             source.sendSuccess(() -> message, false);
@@ -77,3 +77,4 @@ public class ChestsCommand {
         return 1;
     }
 }
+

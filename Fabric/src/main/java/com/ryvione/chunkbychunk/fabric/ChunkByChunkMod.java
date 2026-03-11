@@ -20,6 +20,7 @@ import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
@@ -28,11 +29,13 @@ import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityT
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
 import net.minecraft.core.BlockPos;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.PackType;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.MenuProvider;
 import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.*;
@@ -40,6 +43,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
 import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import com.ryvione.chunkbychunk.common.ChunkByChunkConstants;
@@ -55,18 +59,19 @@ import com.ryvione.chunkbychunk.server.world.SkyChunkGenerator;
 import com.ryvione.chunkbychunk.config.ChunkByChunkConfig;
 import com.ryvione.chunkbychunk.config.system.ConfigSystem;
 import com.ryvione.chunkbychunk.server.ServerEventHandler;
+import com.ryvione.chunkbychunk.server.StarterGuide;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 public class ChunkByChunkMod implements ModInitializer {
     private static final Logger LOGGER = LogManager.getLogger(ChunkByChunkConstants.MOD_ID);
-    public static final SpawnChunkBlock SPAWN_CHUNK_BLOCK = new SpawnChunkBlock("", false, BlockBehaviour.Properties.of().mapColor(MapColor.STONE));
-    public static final Block UNSTABLE_SPAWN_CHUNK_BLOCK = new SpawnChunkBlock("", true, BlockBehaviour.Properties.of().mapColor(MapColor.STONE));
-    public static final Block BEDROCK_CHEST_BLOCK = new BedrockChestBlock(BlockBehaviour.Properties.of().mapColor(MapColor.STONE).strength(-1, 3600000.0F).isValidSpawn(((state, getter, pos, arg) -> false)));
-    public static final Block WORLD_CORE_BLOCK = new Block(BlockBehaviour.Properties.of().mapColor(MapColor.STONE).strength(3.0F).lightLevel((state) -> 7));
-    public static final Block WORLD_FORGE_BLOCK = new WorldForgeBlock(BlockBehaviour.Properties.of().mapColor(MapColor.STONE).strength(3.5F).lightLevel((state) -> 7));
-    public static final Block WORLD_SCANNER_BLOCK = new WorldScannerBlock(BlockBehaviour.Properties.of().mapColor(MapColor.STONE).strength(3.5F).lightLevel((state) -> 4));
-    public static final Block WORLD_MENDER_BLOCK = new WorldMenderBlock(BlockBehaviour.Properties.of().mapColor(MapColor.STONE).strength(3.5F).lightLevel((state) -> 4));
+    public static final SpawnChunkBlock SPAWN_CHUNK_BLOCK = new SpawnChunkBlock("", false, blockProps("chunkspawner").mapColor(MapColor.STONE));
+    public static final Block UNSTABLE_SPAWN_CHUNK_BLOCK = new SpawnChunkBlock("", true, blockProps("unstablechunkspawner").mapColor(MapColor.STONE));
+    public static final Block BEDROCK_CHEST_BLOCK = new BedrockChestBlock(blockProps("bedrockchest").mapColor(MapColor.STONE).strength(-1, 3600000.0F).isValidSpawn(((state, getter, pos, arg) -> false)));
+    public static final Block WORLD_CORE_BLOCK = new Block(blockProps("worldcore").mapColor(MapColor.STONE).strength(3.0F).lightLevel((state) -> 7));
+    public static final Block WORLD_FORGE_BLOCK = new WorldForgeBlock(blockProps("worldforge").mapColor(MapColor.STONE).strength(3.5F).lightLevel((state) -> 7));
+    public static final Block WORLD_SCANNER_BLOCK = new WorldScannerBlock(blockProps("worldscanner").mapColor(MapColor.STONE).strength(3.5F).lightLevel((state) -> 4));
+    public static final Block WORLD_MENDER_BLOCK = new WorldMenderBlock(blockProps("worldmender").mapColor(MapColor.STONE).strength(3.5F).lightLevel((state) -> 4));
     public static Item SPAWN_CHUNK_BLOCK_ITEM;
     public static Item UNSTABLE_SPAWN_CHUNK_BLOCK_ITEM;
     public static Item BEDROCK_CHEST_BLOCK_ITEM;
@@ -86,7 +91,7 @@ public class ChunkByChunkMod implements ModInitializer {
     public static MenuType<WorldScannerMenu> WORLD_SCANNER_MENU;
     public static MenuType<WorldMenderMenu> WORLD_MENDER_MENU;
     public static SoundEvent SPAWN_CHUNK_SOUND_EVENT;
-    public static ResourceLocation CONFIG_PACKET = ResourceLocation.fromNamespaceAndPath(ChunkByChunkConstants.MOD_ID, "config");
+    public static Identifier CONFIG_PACKET = Identifier.fromNamespaceAndPath(ChunkByChunkConstants.MOD_ID, "config");
     public static List<ItemStack> biomeThemedBlockItems;
     public static final CreativeModeTab CHUNK_BY_CHUNK_TAB = FabricItemGroup.builder()
             .icon(() -> new ItemStack(WORLD_CORE_BLOCK))
@@ -110,8 +115,8 @@ public class ChunkByChunkMod implements ModInitializer {
     static {
         ResourceManagerHelper.get(PackType.SERVER_DATA).registerReloadListener(new SimpleSynchronousResourceReloadListener() {
             @Override
-            public ResourceLocation getFabricId() {
-                return ResourceLocation.fromNamespaceAndPath(ChunkByChunkConstants.MOD_ID, "server_data");
+            public Identifier getFabricId() {
+                return Identifier.fromNamespaceAndPath(ChunkByChunkConstants.MOD_ID, "server_data");
             }
             @Override
             public void onResourceManagerReload(ResourceManager resourceManager) {
@@ -132,29 +137,31 @@ public class ChunkByChunkMod implements ModInitializer {
         List<Block> themeSpawnBlocks = new ArrayList<>();
         List<String> biomeThemesList = new ArrayList<>(ChunkByChunkConstants.BIOME_THEMES);
         for (String biomeTheme : biomeThemesList) {
-            Block spawnBlock = new SpawnChunkBlock(biomeTheme, false, BlockBehaviour.Properties.of().mapColor(MapColor.STONE));
+            String biomeBlockId = biomeTheme + ChunkByChunkConstants.BIOME_CHUNK_BLOCK_SUFFIX;
+            Block spawnBlock = new SpawnChunkBlock(biomeTheme, false, blockProps(biomeBlockId).mapColor(MapColor.STONE));
             Registry.register(BuiltInRegistries.BLOCK, createId(biomeTheme + ChunkByChunkConstants.BIOME_CHUNK_BLOCK_SUFFIX), spawnBlock);
             themeSpawnBlocks.add(spawnBlock);
         }
-        SPAWN_CHUNK_BLOCK_ITEM = Registry.register(BuiltInRegistries.ITEM, createId("chunkspawner"), new BlockItem(SPAWN_CHUNK_BLOCK, new Item.Properties()));
-        UNSTABLE_SPAWN_CHUNK_BLOCK_ITEM = Registry.register(BuiltInRegistries.ITEM, createId("unstablechunkspawner"), new BlockItem(UNSTABLE_SPAWN_CHUNK_BLOCK, new Item.Properties()));
+        SPAWN_CHUNK_BLOCK_ITEM = Registry.register(BuiltInRegistries.ITEM, createId("chunkspawner"), new BlockItem(SPAWN_CHUNK_BLOCK, itemProps("chunkspawner").useBlockDescriptionPrefix()));
+        UNSTABLE_SPAWN_CHUNK_BLOCK_ITEM = Registry.register(BuiltInRegistries.ITEM, createId("unstablechunkspawner"), new BlockItem(UNSTABLE_SPAWN_CHUNK_BLOCK, itemProps("unstablechunkspawner").useBlockDescriptionPrefix()));
         List<ItemStack> themeSpawnBlockItems = new ArrayList<>();
         for (int i = 0; i < biomeThemesList.size(); i++) {
             String biomeTheme = biomeThemesList.get(i);
             Block spawnBlock = themeSpawnBlocks.get(i);
-            BlockItem item = new BlockItem(spawnBlock, new Item.Properties());
-            Registry.register(BuiltInRegistries.ITEM, createId(biomeTheme + ChunkByChunkConstants.BIOME_CHUNK_BLOCK_ITEM_SUFFIX), item);
+            String biomeItemId = biomeTheme + ChunkByChunkConstants.BIOME_CHUNK_BLOCK_ITEM_SUFFIX;
+            BlockItem item = new BlockItem(spawnBlock, itemProps(biomeItemId).useBlockDescriptionPrefix());
+            Registry.register(BuiltInRegistries.ITEM, createId(biomeItemId), item);
             themeSpawnBlockItems.add(item.getDefaultInstance());
         }
         biomeThemedBlockItems = ImmutableList.copyOf(themeSpawnBlockItems);
-        BEDROCK_CHEST_BLOCK_ITEM = Registry.register(BuiltInRegistries.ITEM, createId("bedrockchest"), new BlockItem(BEDROCK_CHEST_BLOCK, new Item.Properties()));
-        WORLD_CORE_BLOCK_ITEM = Registry.register(BuiltInRegistries.ITEM, createId("worldcore"), new BlockItem(WORLD_CORE_BLOCK, new Item.Properties()));
-        WORLD_FORGE_BLOCK_ITEM = Registry.register(BuiltInRegistries.ITEM, createId("worldforge"), new BlockItem(WORLD_FORGE_BLOCK, new Item.Properties()));
-        WORLD_SCANNER_BLOCK_ITEM = Registry.register(BuiltInRegistries.ITEM, createId("worldscanner"), new BlockItem(WORLD_SCANNER_BLOCK, new Item.Properties()));
-        WORLD_MENDER_BLOCK_ITEM = Registry.register(BuiltInRegistries.ITEM, createId("worldmender"), new BlockItem(WORLD_MENDER_BLOCK, new Item.Properties()));
-        WORLD_FRAGMENT_ITEM = Registry.register(BuiltInRegistries.ITEM, createId("worldfragment"), new Item(new Item.Properties()));
-        WORLD_SHARD_ITEM = Registry.register(BuiltInRegistries.ITEM, createId("worldshard"), new Item(new Item.Properties()));
-        WORLD_CRYSTAL_ITEM = Registry.register(BuiltInRegistries.ITEM, createId("worldcrystal"), new Item(new Item.Properties()));
+        BEDROCK_CHEST_BLOCK_ITEM = Registry.register(BuiltInRegistries.ITEM, createId("bedrockchest"), new BlockItem(BEDROCK_CHEST_BLOCK, itemProps("bedrockchest").useBlockDescriptionPrefix()));
+        WORLD_CORE_BLOCK_ITEM = Registry.register(BuiltInRegistries.ITEM, createId("worldcore"), new BlockItem(WORLD_CORE_BLOCK, itemProps("worldcore").useBlockDescriptionPrefix()));
+        WORLD_FORGE_BLOCK_ITEM = Registry.register(BuiltInRegistries.ITEM, createId("worldforge"), new BlockItem(WORLD_FORGE_BLOCK, itemProps("worldforge").useBlockDescriptionPrefix()));
+        WORLD_SCANNER_BLOCK_ITEM = Registry.register(BuiltInRegistries.ITEM, createId("worldscanner"), new BlockItem(WORLD_SCANNER_BLOCK, itemProps("worldscanner").useBlockDescriptionPrefix()));
+        WORLD_MENDER_BLOCK_ITEM = Registry.register(BuiltInRegistries.ITEM, createId("worldmender"), new BlockItem(WORLD_MENDER_BLOCK, itemProps("worldmender").useBlockDescriptionPrefix()));
+        WORLD_FRAGMENT_ITEM = Registry.register(BuiltInRegistries.ITEM, createId("worldfragment"), new Item(itemProps("worldfragment")));
+        WORLD_SHARD_ITEM = Registry.register(BuiltInRegistries.ITEM, createId("worldshard"), new Item(itemProps("worldshard")));
+        WORLD_CRYSTAL_ITEM = Registry.register(BuiltInRegistries.ITEM, createId("worldcrystal"), new Item(itemProps("worldcrystal")));
         BEDROCK_CHEST_BLOCK_ENTITY = Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, createId("bedrockchestentity"), FabricBlockEntityTypeBuilder.create(BedrockChestBlockEntity::new, BEDROCK_CHEST_BLOCK).build(null));
         WORLD_FORGE_BLOCK_ENTITY = Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, createId("worldforgeentity"), FabricBlockEntityTypeBuilder.create(WorldForgeBlockEntity::new, WORLD_FORGE_BLOCK).build(null));
         WORLD_SCANNER_BLOCK_ENTITY = Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, createId("worldscannerentity"), FabricBlockEntityTypeBuilder.create(WorldScannerBlockEntity::new, WORLD_SCANNER_BLOCK).build(null));
@@ -174,14 +181,31 @@ public class ChunkByChunkMod implements ModInitializer {
             SpawnChunkCommand.register(dispatcher);
             com.ryvione.chunkbychunk.server.commands.ChestsCommand.register(dispatcher);
         });
-        ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
-            LOGGER.debug("Player joined - config sync disabled (networking API changed)");
-        });
+        ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> server.execute(() -> StarterGuide.giveIfNeeded(handler.player)));
         UseBlockCallback.EVENT.register((player, world, hand, hitResult) -> {
+            Block clickedBlock = world.getBlockState(hitResult.getBlockPos()).getBlock();
+            if (clickedBlock == WORLD_FORGE_BLOCK
+                    || clickedBlock == WORLD_SCANNER_BLOCK
+                    || clickedBlock == WORLD_MENDER_BLOCK) {
+                if (world.isClientSide()) {
+                    return InteractionResult.SUCCESS;
+                }
+                BlockEntity blockEntity = world.getBlockEntity(hitResult.getBlockPos());
+                if (blockEntity instanceof MenuProvider provider) {
+                    player.openMenu(provider);
+                    return InteractionResult.CONSUME;
+                }
+                return InteractionResult.PASS;
+            }
+
+            ItemStack heldItem = player.getItemInHand(hand);
+            if (!(heldItem.getItem() instanceof BlockItem)) {
+                return InteractionResult.PASS;
+            }
             BlockPos pos = hitResult.getBlockPos();
             BlockPos placePos = pos.relative(hitResult.getDirection());
             if (!CommonEventHandler.isBlockPlacementAllowed(placePos, player, world)) {
-                return InteractionResult.CONSUME;
+                return InteractionResult.FAIL;
             }
             return InteractionResult.PASS;
         });
@@ -190,7 +214,16 @@ public class ChunkByChunkMod implements ModInitializer {
     private void setupConfig() {
         new ConfigSystem().synchConfig(Paths.get("defaultconfigs", ChunkByChunkConstants.MOD_ID + ".toml"), ChunkByChunkConfig.get());
     }
-    private ResourceLocation createId(String id) {
-        return ResourceLocation.fromNamespaceAndPath(ChunkByChunkConstants.MOD_ID, id);
+    private static BlockBehaviour.Properties blockProps(String id) {
+        return BlockBehaviour.Properties.of().setId(ResourceKey.create(Registries.BLOCK, createId(id)));
+    }
+
+    private static Item.Properties itemProps(String id) {
+        return new Item.Properties().setId(ResourceKey.create(Registries.ITEM, createId(id)));
+    }
+
+    private static Identifier createId(String id) {
+        return Identifier.fromNamespaceAndPath(ChunkByChunkConstants.MOD_ID, id);
     }
 }
+

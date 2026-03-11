@@ -15,7 +15,7 @@ import mezz.jei.api.JeiPlugin;
 import mezz.jei.api.recipe.RecipeType;
 import mezz.jei.api.registration.IRecipeCategoryRegistration;
 import mezz.jei.api.registration.IRecipeRegistration;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import com.ryvione.chunkbychunk.common.ChunkByChunkConstants;
@@ -39,8 +39,8 @@ public class CBCJeiPlugin implements IModPlugin {
             RecipeType.create(ChunkByChunkConstants.MOD_ID, "worldmender", WorldMenderRecipe.class);
 
     @Override
-    public ResourceLocation getPluginUid() {
-        return ResourceLocation.fromNamespaceAndPath(ChunkByChunkConstants.MOD_ID, "jei");
+    public Identifier getPluginUid() {
+        return Identifier.fromNamespaceAndPath(ChunkByChunkConstants.MOD_ID, "jei");
     }
 
     @Override

@@ -23,21 +23,16 @@ import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.coordinates.Coordinates;
 import net.minecraft.commands.arguments.coordinates.Vec3Argument;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Registry;
-import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.phys.Vec3;
 import com.ryvione.chunkbychunk.common.ChunkByChunkConstants;
 import com.ryvione.chunkbychunk.server.world.ChunkSpawnController;
 import com.ryvione.chunkbychunk.server.world.SkyChunkGenerator;
 import com.ryvione.chunkbychunk.server.world.SpawnChunkHelper;
-import com.ryvione.chunkbychunk.interop.Services;
 import java.util.concurrent.CompletableFuture;
 public class SpawnChunkCommand {
     private static final SimpleCommandExceptionType INVALID_POSITION = new SimpleCommandExceptionType(Component.translatable("commands.chunkbychunk.spawnchunk.invalidPosition"));
@@ -46,15 +41,15 @@ public class SpawnChunkCommand {
     private static final SimpleCommandExceptionType NON_EMPTY_CHUNK = new SimpleCommandExceptionType(Component.translatable("commands.chunkbychunk.spawnchunk.nonemptychunk"));
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         LiteralCommandNode<CommandSourceStack> spawnChunkCommand = dispatcher.register(Commands.literal("chunkbychunk:spawnChunk")
-                .requires(x -> x.hasPermission(2))
+                .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
                 .then(Commands.argument("location", Vec3Argument.vec3())
                 .executes((cmd) -> spawnChunk(cmd.getSource(), cmd.getSource().getLevel(), Vec3Argument.getCoordinates(cmd, "location"), false))));
         LiteralCommandNode<CommandSourceStack> spawnRandomChunkCommand = dispatcher.register(Commands.literal("chunkbychunk:spawnRandomChunk")
-                .requires(x -> x.hasPermission(2))
+                .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
                 .then(Commands.argument("location", Vec3Argument.vec3())
                         .executes((cmd) -> spawnChunk(cmd.getSource(), cmd.getSource().getLevel(), Vec3Argument.getCoordinates(cmd, "location"), true))));
         LiteralCommandNode<CommandSourceStack> spawnBiomeChunkCommand = dispatcher.register(Commands.literal("chunkbychunk:spawnThemedChunk")
-                .requires(x -> x.hasPermission(2))
+                .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
                 .then(Commands.argument("theme", StringArgumentType.word()).suggests(new BiomeThemeSuggestionProvider())
                         .then(Commands.argument("location", Vec3Argument.vec3())
                                 .executes((cmd) -> spawnThemedChunk(cmd.getSource(), cmd.getSource().getLevel(), StringArgumentType.getString(cmd, "theme"), Vec3Argument.getCoordinates(cmd, "location"))))))
@@ -69,7 +64,7 @@ public class SpawnChunkCommand {
     }
     private static int spawnChunk(CommandSourceStack stack, ServerLevel level, Coordinates specifiedCoords, boolean random) throws CommandSyntaxException {
         Vec3 vec3 = specifiedCoords.getPosition(stack);
-        BlockPos pos = new BlockPos((int)vec3.x, level.getMaxBuildHeight() - 1, (int)vec3.z);
+        BlockPos pos = new BlockPos((int)vec3.x, level.getMaxY() - 1, (int)vec3.z);
         ChunkPos chunkPos = new ChunkPos(pos);
         if (!(level.getChunkSource().getGenerator() instanceof SkyChunkGenerator)) {
             throw INVALID_LEVEL.create();
@@ -85,7 +80,7 @@ public class SpawnChunkCommand {
     }
     private static int spawnThemedChunk(CommandSourceStack stack, ServerLevel level, String biome, Coordinates specifiedCoords) throws CommandSyntaxException {
         Vec3 vec3 = specifiedCoords.getPosition(stack);
-        BlockPos pos = new BlockPos((int)vec3.x, level.getMaxBuildHeight() - 1, (int)vec3.z);
+        BlockPos pos = new BlockPos((int)vec3.x, level.getMaxY() - 1, (int)vec3.z);
         ChunkPos chunkPos = new ChunkPos(pos);
         if (level.getChunkSource().getGenerator() instanceof SkyChunkGenerator skyChunkGenerator) {
             ResourceKey<Level> biomeDimension = skyChunkGenerator.getBiomeDimension(biome);
@@ -109,3 +104,5 @@ public class SpawnChunkCommand {
         }
     }
 }
+
+

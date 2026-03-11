@@ -44,7 +44,7 @@ public class SpawnChunkBlock extends Block {
             ChunkSpawnController chunkSpawnController = ChunkSpawnController.get(serverLevel.getServer());
             if (chunkSpawnController.isValidForLevel(serverLevel, biomeTheme, random)) {
                 List<BlockPos> targetPositions = new ArrayList<>();
-                BlockPos initialPos = pos.atY(level.getMaxBuildHeight() - 1);
+                BlockPos initialPos = pos.atY(level.getMaxY() - 1);
                 targetPositions.add(initialPos);
                 Direction targetDirection = hit.getDirection();
                 if (!HORIZONTAL_DIR.contains(targetDirection)) {
@@ -72,3 +72,4 @@ public class SpawnChunkBlock extends Block {
         return random;
     }
 }
+
